@@ -1,44 +1,53 @@
-from flask import Flask, request, Response
-from twilio.twiml.voice_response import VoiceResponse
-from vertexai.preview.generative_models import GenerativeModel
-import vertexai
+# from flask import Flask, request
+# from twilio.rest import Client
+
+# # Twilio credentials (set these as environment variables in real use!)
+# account_sid = "ACe7c1a99d9eb4462db147"
+# auth_token = "de92cadbf44ca7cba6632"
+# twilio_number = "+12409988529"   # Your Twilio phone number
+# to_number = "+573147257733"     # The number you want to call
+
+# client = Client(account_sid, auth_token)
+# app = Flask(__name__)
+
+# @app.route("/voice_", methods=["POST"])
+# def voice():
+#     # TwiML asking for speech input
+#     twiml = """
+#     <Response>
+#         <Gather input="speech" language="es-ES" action="/gather">
+#             <Say voice="Google.es-ES-Chirp3-HD-Puck">
+#                 Por favor, dígame qué plato desea ordenar.
+#             </Say>
+#         </Gather>
+#         <Say>No se recibió ninguna respuesta.</Say>
+#     </Response>
+#     """
+#     return twiml
+
+# @app.route("/gather_", methods=["POST"])
+# def gather():
+#     # Twilio sends the transcription here
+#     speech_result = request.form.get("SpeechResult", "")
+#     print(f"Cliente dijo: {speech_result}")
+#     return f"<Response><Say>Gracias, hemos registrado su pedido: {speech_result}</Say></Response>"
+
+
+# @app.route("/health_", methods=["GET"])
+# def health():
+#     return {"status": "ok", "message": "Cloud Run service is working"}
+
+
+
 import os
-from flask_cors import CORS
+from flask import Flask
 
 app = Flask(__name__)
 
-CORS(app)
-
-# Configura Gemini
-vertexai.init(project="portafolio-data", location="us-central1")
-gemini_model = GenerativeModel("gemini-2.0-flash-lite-001")
-
-@app.route("/voice", methods=["POST"])
-def handle_voice():
-    user_input = request.form.get("SpeechResult", "")
-    print(f"User said: {user_input}")
-
-    # Genera respuesta con Gemini
-    if user_input:
-        gemini_response = gemini_model.generate_content(user_input)
-        reply = gemini_response.text
-    else:
-        reply = "I didn't catch that. Could you repeat?"
-
-    # Responde con voz
-    response = VoiceResponse()
-    response.say(reply, language="en-US")
-    response.redirect("/voice")  # Mantiene el ciclo conversacional
-
-    return Response(str(response), mimetype="text/xml")
-
-@app.route("/health", methods=["GET"])
-def health_check():
-    try:
-        prueba_texto=gemini_model.generate_content('Say Hello!')
-        return {'status':'ok','gemini_response':prueba_texto.text}
-    except Exception as e:
-        return {'status':'Error','msg':str(e)}
+@app.route("/health_", methods=["GET"])
+def health():
+    return {"status": "ok"}
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
